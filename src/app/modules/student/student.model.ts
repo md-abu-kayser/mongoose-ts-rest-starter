@@ -171,12 +171,9 @@ studentSchema.virtual('fullName').get(function () {
   return `${this.name.firstName} ${this.name.middleName} ${this.name.lastName}`;
 });
 
-// pre save middleware/hock : will work on create() save
 studentSchema.pre('save', async function (next) {
-  // console.log(this, 'pre hook : we will  save data');
   // eslint-disable-next-line @typescript-eslint/no-this-alias
-  const user = this; // doc
-  // hashing password and save into DB
+  const user = this;
   user.password = await bcrypt.hash(
     user.password,
     Number(config.bcrypt_salt_rounds),
@@ -184,7 +181,6 @@ studentSchema.pre('save', async function (next) {
   next();
 });
 
-// post save middleware / hock
 studentSchema.post('save', function (doc, next) {
   doc.password = '';
   next();
@@ -201,21 +197,13 @@ studentSchema.pre('findOne', function (next) {
   next();
 });
 
-// [{$match: {isDeleted : {$ne : true }}}, { '$match': { id: '12350' } } ]
 studentSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({ $match: { isDeleted: { $ne: true } } });
   next();
 });
 
-//creating a static method
 studentSchema.statics.isUserExists = async function (id: string) {
   return await Student.findOne({ id });
 };
-
-// // creating a custom method
-// studentSchema.methods.isUserExists = async function (id: string) {
-//   const existingUser = await Student.findOne({ id });
-//   return existingUser;
-// };
 
 export const Student = model<TStudent, StudentModel>('Student', studentSchema);
